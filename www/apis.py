@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__ = 'Michael Liao'
+
 
 '''
 JSON API definition.
@@ -9,7 +9,7 @@ JSON API definition.
 
 import re, json, logging, functools
 
-from transwarp.web import ctx
+from transdborm.web import ctx
 
 class Page(object):
     '''

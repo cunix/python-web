@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-__author__ = 'Michael Liao'
 
 '''
 Database operation module.
@@ -383,7 +382,7 @@ def select_int(sql, *args):
     return d.values()[0]
 
 @with_connection
-def select(sql, *args):
+def select(sql,*args):
     '''
     Execute select SQL and return list or empty list if no result.
 
