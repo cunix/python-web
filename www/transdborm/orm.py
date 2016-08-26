@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 '''
 Database operation module. This module is independent with web module.
 '''
@@ -160,7 +159,6 @@ class ModelMetaclass(type):
 class Model(dict):
     '''
     Base class for ORM.
-
     >>> class User(Model):
     ...     id = IntegerField(primary_key=True)
     ...     name = StringField()
