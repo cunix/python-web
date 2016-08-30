@@ -7,77 +7,8 @@ Database operation module.
 
 import time, uuid, functools, threading, logging
 
-# Dict object:
-class Dict(dict):
-    '''
-    Simple dict but support access as x.y style.
-    >>> d1 = Dict()
-    >>> d1['x'] = 100
-    >>> d1.x
-    100
-    >>> d1.y = 200
-    >>> d1['y']
-    200
-    >>> d2 = Dict(a=1, b=2, c='3')
-    >>> d2.c
-    '3'
-    >>> d2['empty']
-    Traceback (most recent call last):
-        ...
-    KeyError: 'empty'
-    >>> d2.empty
-    Traceback (most recent call last):
-        ...
-    AttributeError: 'Dict' object has no attribute 'empty'
-
-    >>> d3 = Dict(('a', 'b', 'c'), (1, 2, 3))
-    >>> d3.a
-    1
-    >>> d3.b
-    2
-    >>> d3.c
-    3
-    '''
-    def __init__(self, names=(), values=(), **kw):
-        super(Dict, self).__init__(**kw)
-        for k, v in zip(names, values):
-            self[k] = v
-
-    def __getattr__(self, key):
-        try:
-            return self[key]
-        except KeyError:
-            raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
-
-    def __setattr__(self, key, value):
-        self[key] = value
-
-def next_id(t=None):
-    '''
-    Return next id as 50-char string.
-
-    Args:
-        t: unix timestamp, default to None and using time.time().
-    '''
-    if t is None:
-        t = time.time()
-    return '%015d%s000' % (int(t * 1000), uuid.uuid4().hex)
-
-def _profiling(start, sql=''):
-    t = time.time() - start
-    if t > 0.1:
-        logging.warning('[PROFILING] [DB] %s: %s' % (t, sql))
-    else:
-        logging.info('[PROFILING] [DB] %s: %s' % (t, sql))
-
-class DBError(Exception):
-    pass
-
-class MultiColumnsError(DBError):
-    pass
 
 class _LasyConnection(object):
-
     def __init__(self):
         self.connection = None
 
@@ -102,9 +33,6 @@ class _LasyConnection(object):
             connection.close()
 
 class _DbCtx(threading.local):
-    '''
-    Thread local object that holds connection info.
-    '''
     def __init__(self):
         self.connection = None
         self.transactions = 0
@@ -122,9 +50,6 @@ class _DbCtx(threading.local):
         self.connection = None
 
     def cursor(self):
-        '''
-        Return cursor
-        '''
         return self.connection.cursor()
 
 # thread-local db context:
@@ -152,19 +77,9 @@ def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
     params.update(kw)
     params['buffered'] = True
     engine = _Engine(lambda:mysql.connector.connect(**params))
-    # test connection...
     logging.info('Init mysql engine <%s> ok.' % hex(id(engine)))
 
 class _ConnectionCtx(object):
-    '''
-    _ConnectionCtx object that can open and close connection context. _ConnectionCtx object can be nested and only the most
-    outer connection has effect.
-
-    with connection():
-        pass
-        with connection():
-            pass
-    '''
     def __enter__(self):
         global _db_ctx
         self.should_cleanup = False
@@ -179,24 +94,9 @@ class _ConnectionCtx(object):
             _db_ctx.cleanup()
 
 def connection():
-    '''
-    Return _ConnectionCtx object that can be used by 'with' statement:
-
-    with connection():
-        pass
-    '''
     return _ConnectionCtx()
 
 def with_connection(func):
-    '''
-    Decorator for reuse connection.
-
-    @with_connection
-    def foo(*args, **kw):
-        f1()
-        f2()
-        f3()
-    '''
     @functools.wraps(func)
     def _wrapper(*args, **kw):
         with _ConnectionCtx():
@@ -204,11 +104,6 @@ def with_connection(func):
     return _wrapper
 
 class _TransactionCtx(object):
-    '''
-    _TransactionCtx object that can handle transactions.
-    with _TransactionCtx():
-        pass
-    '''
     def __enter__(self):
         global _db_ctx
         self.should_close_conn = False
@@ -330,52 +225,10 @@ def _select(sql, first, *args):
 
 @with_connection
 def select_one(sql, *args):
-    '''
-    Execute select SQL and expected one result.
-    If no result found, return None.
-    If multiple results found, the first one returned.
-
-    >>> u1 = dict(id=100, name='Alice', email='alice@test.org', passwd='ABC-12345', last_modified=time.time())
-    >>> u2 = dict(id=101, name='Sarah', email='sarah@test.org', passwd='ABC-12345', last_modified=time.time())
-    >>> insert('user', **u1)
-    1
-    >>> insert('user', **u2)
-    1
-    >>> u = select_one('select * from user where id=?', 100)
-    >>> u.name
-    u'Alice'
-    >>> select_one('select * from user where email=?', 'abc@email.com')
-    >>> u2 = select_one('select * from user where passwd=? order by email', 'ABC-12345')
-    >>> u2.name
-    u'Alice'
-    '''
     return _select(sql, True, *args)
 
 @with_connection
 def select_int(sql, *args):
-    '''
-    Execute select SQL and expected one int and only one int result.
-
-    >>> n = update('delete from user')
-    >>> u1 = dict(id=96900, name='Ada', email='ada@test.org', passwd='A-12345', last_modified=time.time())
-    >>> u2 = dict(id=96901, name='Adam', email='adam@test.org', passwd='A-12345', last_modified=time.time())
-    >>> insert('user', **u1)
-    1
-    >>> insert('user', **u2)
-    1
-    >>> select_int('select count(*) from user')
-    2
-    >>> select_int('select count(*) from user where email=?', 'ada@test.org')
-    1
-    >>> select_int('select count(*) from user where email=?', 'notexist@test.org')
-    0
-    >>> select_int('select id from user where email=?', 'ada@test.org')
-    96900
-    >>> select_int('select id, name from user where email=?', 'ada@test.org')
-    Traceback (most recent call last):
-        ...
-    MultiColumnsError: Expect only one column.
-    '''
     d = _select(sql, True, *args)
     if len(d)!=1:
         raise MultiColumnsError('Expect only one column.')
@@ -383,27 +236,6 @@ def select_int(sql, *args):
 
 @with_connection
 def select(sql,*args):
-    '''
-    Execute select SQL and return list or empty list if no result.
-
-    >>> u1 = dict(id=200, name='Wall.E', email='wall.e@test.org', passwd='back-to-earth', last_modified=time.time())
-    >>> u2 = dict(id=201, name='Eva', email='eva@test.org', passwd='back-to-earth', last_modified=time.time())
-    >>> insert('user', **u1)
-    1
-    >>> insert('user', **u2)
-    1
-    >>> L = select('select * from user where id=?', 900900900)
-    >>> L
-    []
-    >>> L = select('select * from user where id=?', 200)
-    >>> L[0].email
-    u'wall.e@test.org'
-    >>> L = select('select * from user where passwd=? order by id desc', 'back-to-earth')
-    >>> L[0].name
-    u'Eva'
-    >>> L[1].name
-    u'Wall.E'
-    '''
     return _select(sql, False, *args)
 
 @with_connection
@@ -426,52 +258,64 @@ def _update(sql, *args):
             cursor.close()
 
 def insert(table, **kw):
-    '''
-    Execute insert SQL.
-
-    >>> u1 = dict(id=2000, name='Bob', email='bob@test.org', passwd='bobobob', last_modified=time.time())
-    >>> insert('user', **u1)
-    1
-    >>> u2 = select_one('select * from user where id=?', 2000)
-    >>> u2.name
-    u'Bob'
-    >>> insert('user', **u2)
-    Traceback (most recent call last):
-      ...
-    IntegrityError: 1062 (23000): Duplicate entry '2000' for key 'PRIMARY'
-    '''
     cols, args = zip(*kw.iteritems())
     sql = 'insert into `%s` (%s) values (%s)' % (table, ','.join(['`%s`' % col for col in cols]), ','.join(['?' for i in range(len(cols))]))
     return _update(sql, *args)
 
 def update(sql, *args):
-    r'''
-    Execute update SQL.
-
-    >>> u1 = dict(id=1000, name='Michael', email='michael@test.org', passwd='123456', last_modified=time.time())
-    >>> insert('user', **u1)
-    1
-    >>> u2 = select_one('select * from user where id=?', 1000)
-    >>> u2.email
-    u'michael@test.org'
-    >>> u2.passwd
-    u'123456'
-    >>> update('update user set email=?, passwd=? where id=?', 'michael@example.org', '654321', 1000)
-    1
-    >>> u3 = select_one('select * from user where id=?', 1000)
-    >>> u3.email
-    u'michael@example.org'
-    >>> u3.passwd
-    u'654321'
-    >>> update('update user set passwd=? where id=?', '***', '123\' or id=\'456')
-    0
-    '''
     return _update(sql, *args)
+
+
+
+class Dict(dict):
+    def __init__(self, names=(), values=(), **kw):
+        super(Dict, self).__init__(**kw)
+        for k, v in zip(names, values):
+            self[k] = v
+
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+def next_id(t=None):
+    if t is None:
+        t = time.time()
+    return '%015d%s000' % (int(t * 1000), uuid.uuid4().hex)
+
+def _profiling(start, sql=''):
+    t = time.time() - start
+    if t > 0.1:
+        logging.warning('[PROFILING] [DB] %s: %s' % (t, sql))
+    else:
+        logging.info('[PROFILING] [DB] %s: %s' % (t, sql))
+
+class DBError(Exception):
+    pass
+
+class MultiColumnsError(DBError):
+    pass
 
 if __name__=='__main__':
     logging.basicConfig(level=logging.DEBUG)
-    create_engine('www-data', 'www-data', 'test')
-    update('drop table if exists user')
-    update('create table user (id int primary key, name text, email text, passwd text, last_modified real)')
-    import doctest
-    doctest.testmod()
+    create_engine('root', 'root', 'awesome')
+    index=0
+    while index<1000:
+        id=index+100
+        email='ada@test121.org'+str(index)
+
+        u1 = dict()
+        u1['created_at'] = time.time()
+        u1['password'] = 'A-12345'
+        u1['email'] = email
+        u1['name']=str(id)
+        u1['id'] = str(id)
+        # id = id, name = 'Ada', email = email, password = 'A-12345', created_at = time.time()
+        insert("users",**u1)
+        index=index+1
+    # import doctest
+    # doctest.testmod()

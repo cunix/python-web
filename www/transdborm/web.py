@@ -4,8 +4,6 @@
 '''
 A simple, lightweight, WSGI-compatible web framework.
 '''
-
-
 import types, os, re, cgi, sys, time, datetime, functools, mimetypes, threading, logging, urllib, traceback
 
 try:
