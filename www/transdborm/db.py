@@ -147,30 +147,6 @@ class _TransactionCtx(object):
         logging.info('rollback ok.')
 
 def transaction():
-    '''
-    Create a transaction object so can use with statement:
-
-    with transaction():
-        pass
-
-    >>> def update_profile(id, name, rollback):
-    ...     u = dict(id=id, name=name, email='%s@test.org' % name, passwd=name, last_modified=time.time())
-    ...     insert('user', **u)
-    ...     r = update('update user set passwd=? where id=?', name.upper(), id)
-    ...     if rollback:
-    ...         raise StandardError('will cause rollback...')
-    >>> with transaction():
-    ...     update_profile(900301, 'Python', False)
-    >>> select_one('select * from user where id=?', 900301).name
-    u'Python'
-    >>> with transaction():
-    ...     update_profile(900302, 'Ruby', True)
-    Traceback (most recent call last):
-      ...
-    StandardError: will cause rollback...
-    >>> select('select * from user where id=?', 900302)
-    []
-    '''
     return _TransactionCtx()
 
 def with_transaction(func):

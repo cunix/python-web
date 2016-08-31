@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-
-
 import os, re, time, base64, hashlib, logging
 
 import markdown2
 
-from transwarp.web import get, post, ctx, view, interceptor, seeother, notfound
+from transdborm.web import get, post, ctx, view, interceptor, seeother, notfound
 
 from apis import api, Page, APIError, APIValueError, APIPermissionError, APIResourceNotFoundError
 from models import User, Blog, Comment

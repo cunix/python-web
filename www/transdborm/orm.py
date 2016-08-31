@@ -107,9 +107,6 @@ def _gen_sql(table_name, mappings):
     return '\n'.join(sql)
 
 class ModelMetaclass(type):
-    '''
-    Metaclass for model objects.
-    '''
     def __new__(cls, name, bases, attrs):
         # skip base Model class:
         if name=='Model':
@@ -157,51 +154,7 @@ class ModelMetaclass(type):
         return type.__new__(cls, name, bases, attrs)
 
 class Model(dict):
-    '''
-    Base class for ORM.
-    >>> class User(Model):
-    ...     id = IntegerField(primary_key=True)
-    ...     name = StringField()
-    ...     email = StringField(updatable=False)
-    ...     passwd = StringField(default=lambda: '******')
-    ...     last_modified = FloatField()
-    ...     def pre_insert(self):
-    ...         self.last_modified = time.time()
-    >>> u = User(id=10190, name='Michael', email='orm@db.org')
-    >>> r = u.insert()
-    >>> u.email
-    'orm@db.org'
-    >>> u.passwd
-    '******'
-    >>> u.last_modified > (time.time() - 2)
-    True
-    >>> f = User.get(10190)
-    >>> f.name
-    u'Michael'
-    >>> f.email
-    u'orm@db.org'
-    >>> f.email = 'changed@db.org'
-    >>> r = f.update() # change email but email is non-updatable!
-    >>> len(User.find_all())
-    1
-    >>> g = User.get(10190)
-    >>> g.email
-    u'orm@db.org'
-    >>> r = g.delete()
-    >>> len(db.select('select * from user where id=10190'))
-    0
-    >>> import json
-    >>> print User().__sql__()
-    -- generating SQL for user:
-    create table `user` (
-      `id` bigint not null,
-      `name` varchar(255) not null,
-      `email` varchar(255) not null,
-      `passwd` varchar(255) not null,
-      `last_modified` real not null,
-      primary key(`id`)
-    );
-    '''
+
     __metaclass__ = ModelMetaclass
 
     def __init__(self, **kw):
@@ -304,5 +257,5 @@ if __name__=='__main__':
     db.create_engine('www-data', 'www-data', 'test')
     db.update('drop table if exists user')
     db.update('create table user (id int primary key, name text, email text, passwd text, last_modified real)')
-    import doctest
-    doctest.testmod()
+    # import doctest
+    # doctest.testmod()

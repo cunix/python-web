@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 '''
 A simple, lightweight, WSGI-compatible web framework.
 '''
@@ -16,37 +15,7 @@ except ImportError:
 ctx = threading.local()
 
 # Dict object:
-
 class Dict(dict):
-    '''
-    Simple dict but support access as x.y style.
-
-    >>> d1 = Dict()
-    >>> d1['x'] = 100
-    >>> d1.x
-    100
-    >>> d1.y = 200
-    >>> d1['y']
-    200
-    >>> d2 = Dict(a=1, b=2, c='3')
-    >>> d2.c
-    '3'
-    >>> d2['empty']
-    Traceback (most recent call last):
-        ...
-    KeyError: 'empty'
-    >>> d2.empty
-    Traceback (most recent call last):
-        ...
-    AttributeError: 'Dict' object has no attribute 'empty'
-    >>> d3 = Dict(('a', 'b', 'c'), (1, 2, 3))
-    >>> d3.a
-    1
-    >>> d3.b
-    2
-    >>> d3.c
-    3
-    '''
     def __init__(self, names=(), values=(), **kw):
         super(Dict, self).__init__(**kw)
         for k, v in zip(names, values):
@@ -64,13 +33,11 @@ class Dict(dict):
 _TIMEDELTA_ZERO = datetime.timedelta(0)
 
 # timezone as UTC+8:00, UTC-10:00
-
 _RE_TZ = re.compile('^([\+\-])([0-9]{1,2})\:([0-9]{1,2})$')
 
 class UTC(datetime.tzinfo):
     '''
     A UTC tzinfo object.
-
     >>> tz0 = UTC('+00:00')
     >>> tz0.tzname(None)
     'UTC+00:00'
@@ -130,7 +97,6 @@ _RESPONSE_STATUSES = {
     100: 'Continue',
     101: 'Switching Protocols',
     102: 'Processing',
-
     # Successful
     200: 'OK',
     201: 'Created',
@@ -141,7 +107,6 @@ _RESPONSE_STATUSES = {
     206: 'Partial Content',
     207: 'Multi Status',
     226: 'IM Used',
-
     # Redirection
     300: 'Multiple Choices',
     301: 'Moved Permanently',
@@ -150,7 +115,6 @@ _RESPONSE_STATUSES = {
     304: 'Not Modified',
     305: 'Use Proxy',
     307: 'Temporary Redirect',
-
     # Client Error
     400: 'Bad Request',
     401: 'Unauthorized',
@@ -175,7 +139,6 @@ _RESPONSE_STATUSES = {
     423: 'Locked',
     424: 'Failed Dependency',
     426: 'Upgrade Required',
-
     # Server Error
     500: 'Internal Server Error',
     501: 'Not Implemented',
@@ -230,19 +193,10 @@ _RESPONSE_HEADERS = (
     'X-Powered-By',
     'X-UA-Compatible',
 )
-
 _RESPONSE_HEADER_DICT = dict(zip(map(lambda x: x.upper(), _RESPONSE_HEADERS), _RESPONSE_HEADERS))
-
-_HEADER_X_POWERED_BY = ('X-Powered-By', 'transwarp/1.0')
+_HEADER_X_POWERED_BY = ('X-Powered-By', 'transdborm/1.0')
 
 class HttpError(Exception):
-    '''
-    HttpError that defines http error code.
-
-    >>> e = HttpError(404)
-    >>> e.status
-    '404 Not Found'
-    '''
     def __init__(self, code):
         '''
         Init an HttpError with response code.
@@ -346,7 +300,6 @@ def conflict():
 def internalerror():
     '''
     Send an internal error response.
-
     >>> raise internalerror()
     Traceback (most recent call last):
       ...
@@ -419,7 +372,6 @@ def _to_unicode(s, encoding='utf-8'):
 def _quote(s, encoding='utf-8'):
     '''
     Url quote as str.
-
     >>> _quote('http://example/test?a=1+')
     'http%3A//example/test%3Fa%3D1%2B'
     >>> _quote(u'hello world!')
@@ -559,7 +511,6 @@ def _static_file_generator(fpath):
             block = f.read(BLOCK_SIZE)
 
 class StaticFileRoute(object):
-
     def __init__(self):
         self.method = 'GET'
         self.is_static = False
@@ -579,7 +530,7 @@ class StaticFileRoute(object):
         return _static_file_generator(fpath)
 
 def favicon_handler():
-    return static_file_handler('/favicon.ico')
+    return _static_file_generator('/favicon.ico')
 
 class MultipartFile(object):
     '''
@@ -1317,7 +1268,6 @@ def _build_interceptor_fn(func, next):
 def _build_interceptor_chain(last_fn, *interceptors):
     '''
     Build interceptor chain.
-
     >>> def target():
     ...     print 'target'
     ...     return 123
@@ -1533,6 +1483,5 @@ class WSGIApplication(object):
 
 if __name__=='__main__':
     sys.path.append('.')
-    import doctest
-    doctest.testmod()
-l
+    # import doctest
+    # doctest.testmod()
