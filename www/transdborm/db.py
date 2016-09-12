@@ -7,7 +7,6 @@ Database operation module.
 
 import time, uuid, functools, threading, logging
 
-
 class _LasyConnection(object):
     def __init__(self):
         self.connection = None
@@ -240,8 +239,6 @@ def insert(table, **kw):
 
 def update(sql, *args):
     return _update(sql, *args)
-
-
 
 class Dict(dict):
     def __init__(self, names=(), values=(), **kw):

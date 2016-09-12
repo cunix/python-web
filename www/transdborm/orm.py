@@ -10,9 +10,7 @@ import time, logging
 import db
 
 class Field(object):
-
     _count = 0
-
     def __init__(self, **kw):
         self.name = kw.get('name', None)
         self._default = kw.get('default', None)
@@ -96,7 +94,7 @@ def _gen_sql(table_name, mappings):
     sql = ['-- generating SQL for %s:' % table_name, 'create table `%s` (' % table_name]
     for f in sorted(mappings.values(), lambda x, y: cmp(x._order, y._order)):
         if not hasattr(f, 'ddl'):
-            raise StandardError('no ddl in field "%s".' % n)
+            raise StandardError('no ddl in field "%s".' % f)
         ddl = f.ddl
         nullable = f.nullable
         if f.primary_key:
