@@ -13,6 +13,6 @@ import urllib,urllib2
 url="http://coolshell.cn/featured_posts"
 read=urllib2.urlopen(url)
 data=read.read()
-with open("coolshell.html","wb") as code:
+with open("blog.html","wb") as code:
     code.write(data)
 urllib.urlretrieve(url,"shell.html")

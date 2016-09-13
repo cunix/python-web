@@ -43,9 +43,51 @@
 # di.update({"name":'Wincent','age':'25','hobby':'coding'})
 # print di
 
-d=dict()
-d=dict(a=12,b=12,c=14)
-print d
+# d=dict()
+# d=dict(a=12,b=12,c=14)
+# print d
+#
+# keys=['Wincent','Peter','Ben','Jack','Marry','Tina']
+# values=[1,2,3,4,5]
+# d=dict(zip(keys,values))
+# print d
+
+# pop and popitem
+# sample={'a':'apple','b':"benz",'c':'cindy'}
+# print sample.pop('a')
+# print sample.pop('b')
+# print sample
+# print sample.popitem()
+# print sample.popitem()
+# print sample.popitem()
+# print sample
+
+# foreach dict
+# for x in sample:
+#     print x,sample.get(x)
+#
+# for (k,v) in sample.items():
+#     print k,v
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
